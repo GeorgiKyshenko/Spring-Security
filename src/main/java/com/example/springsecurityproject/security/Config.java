@@ -1,5 +1,6 @@
 package com.example.springsecurityproject.security;
 
+import com.example.springsecurityproject.constants.UserRole;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -37,13 +38,13 @@ public class Config {
         UserDetails defaultUser = User.builder()
                 .username("Georgi")
                 .password(encoder().encode("12345"))
-                .roles("STUDENT")
+                .roles(UserRole.STUDENT.name())
                 .build();
 
         UserDetails defaultUser2 = User.builder()
                 .username("Kyshenko")
                 .password(encoder().encode("123"))
-                .roles("ADMIN")
+                .roles(UserRole.ADMIN.name())
                 .build();
 
         return new InMemoryUserDetailsManager(defaultUser, defaultUser2);
