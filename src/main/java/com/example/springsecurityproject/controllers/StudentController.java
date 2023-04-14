@@ -14,7 +14,7 @@ public class StudentController {
 
     private static final List<Student> students = List.of(
             new Student(1, "Georgi"),
-            new Student(2, "Martin"),
+            new Student(2, "Kyshenko"),
             new Student(3, "Daniel")
     );
 

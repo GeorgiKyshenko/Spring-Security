@@ -1,8 +1,10 @@
 package com.example.springsecurityproject.security;
 
+import com.example.springsecurityproject.constants.UserPermission;
 import com.example.springsecurityproject.constants.UserRole;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -13,6 +15,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static com.example.springsecurityproject.constants.UserPermission.*;
+import static com.example.springsecurityproject.constants.UserRole.*;
+
 @Configuration
 @EnableWebSecurity
 public class Config {
@@ -22,12 +27,18 @@ public class Config {
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         return http
+                .csrf().disable()
                 .authorizeHttpRequests()
                 .requestMatchers("/").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/**").hasRole(STUDENT.name())
+                .requestMatchers(HttpMethod.POST, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
+                .requestMatchers(HttpMethod.DELETE, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
+                .requestMatchers(HttpMethod.PUT, "/management/api/**").hasAuthority(COURSE_WRITE.getPermission())
+                .requestMatchers(HttpMethod.GET, "/management/api/**").hasAnyRole(ADMIN.name(), ADMIN_TRAINEE.name())
                 .anyRequest()
                 .authenticated()
                 .and()
-                .formLogin()
+                .httpBasic()
                 .and()
                 .build();
     }
@@ -35,19 +46,28 @@ public class Config {
     //override the default user with our own created user
     @Bean
     protected UserDetailsService userDetailsService() {
-        UserDetails defaultUser = User.builder()
+        UserDetails studentUser = User.builder()
                 .username("Georgi")
-                .password(encoder().encode("12345"))
-                .roles(UserRole.STUDENT.name())
+                .password(encoder().encode("123"))
+//                .roles(STUDENT.name())
+                .authorities(STUDENT.getGrantedAuthorities())
                 .build();
 
-        UserDetails defaultUser2 = User.builder()
+        UserDetails adminUser = User.builder()
                 .username("Kyshenko")
                 .password(encoder().encode("123"))
-                .roles(UserRole.ADMIN.name())
+//              .roles(ADMIN.name())
+                .authorities(ADMIN.getGrantedAuthorities())
                 .build();
 
-        return new InMemoryUserDetailsManager(defaultUser, defaultUser2);
+        UserDetails adminTraineeUser = User.builder()
+                .username("Admin Trainee")
+                .password(encoder().encode("123"))
+//              .roles(ADMIN_TRAINEE.name())
+                .authorities(ADMIN_TRAINEE.getGrantedAuthorities())
+                .build();
+
+        return new InMemoryUserDetailsManager(studentUser, adminUser, adminTraineeUser);
     }
 
     @Bean
