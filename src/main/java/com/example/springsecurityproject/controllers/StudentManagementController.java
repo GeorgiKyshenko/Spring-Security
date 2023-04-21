@@ -2,6 +2,7 @@ package com.example.springsecurityproject.controllers;
 
 import com.example.springsecurityproject.models.Student;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,11 +19,13 @@ public class StudentManagementController {
     );
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_ADMIN_TRAINEE')")
     public List<Student> getAllStudents() {
         return students;
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('student:write')")
     public void registerNewStudent(@RequestBody Student student) {
         log.info(String.valueOf(student));
     }
