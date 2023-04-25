@@ -1,10 +1,17 @@
 package com.example.springsecurityproject.security;
 
+import com.example.springsecurityproject.auth.UserDAOService;
 import com.example.springsecurityproject.constants.UserPermission;
 import com.example.springsecurityproject.constants.UserRole;
+import com.example.springsecurityproject.services.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,6 +32,7 @@ import static com.example.springsecurityproject.constants.UserRole.*;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 @EnableMethodSecurity(prePostEnabled = true)
 // this is needed because of @PreAuthorize annotation on the methods in the controller (proPostEnable is true by default)
 public class Config {
@@ -32,7 +40,7 @@ public class Config {
     /* .formLogin uses login form with some html and css also it provides /login and /logout endpoints
        .httpBasic is also login form but without these endpoints and css */
     @Bean
-    public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+    public SecurityFilterChain configuration(HttpSecurity http) throws Exception {
         return http
                 .csrf().disable()
                 .authorizeHttpRequests()
@@ -53,8 +61,8 @@ public class Config {
                 .and()
                 .logout()
                 /*this is what happens under the hood when we disable csrf, the "/logout" URL is GET method but usually if we want to have
-                * the protection of csrf logout should be POST so when we enable csrf the logout URL becomes POST by default.
-                * So this logoutRequestMatcher is used under the hood of Spring Security when csrf is disabled*/
+                 * the protection of csrf logout should be POST so when we enable csrf the logout URL becomes POST by default.
+                 * So this logoutRequestMatcher is used under the hood of Spring Security when csrf is disabled*/
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
                 .clearAuthentication(true)
                 .invalidateHttpSession(true)
@@ -63,32 +71,35 @@ public class Config {
                 .build();
     }
 
-    //override the default user with our own created user
-    @Bean
-    protected UserDetailsService userDetailsService() {
-        UserDetails studentUser = User.builder()
-                .username("Georgi")
-                .password(encoder().encode("123"))
-//                .roles(STUDENT.name())
-                .authorities(STUDENT.getGrantedAuthorities())
-                .build();
-
-        UserDetails adminUser = User.builder()
-                .username("Kyshenko")
-                .password(encoder().encode("123"))
-//              .roles(ADMIN.name())
-                .authorities(ADMIN.getGrantedAuthorities())
-                .build();
-
-        UserDetails adminTraineeUser = User.builder()
-                .username("Admin Trainee")
-                .password(encoder().encode("123"))
-//              .roles(ADMIN_TRAINEE.name())
-                .authorities(ADMIN_TRAINEE.getGrantedAuthorities())
-                .build();
-
-        return new InMemoryUserDetailsManager(studentUser, adminUser, adminTraineeUser);
-    }
+    /*1.override the default user with our own created user
+    /2.if another class implements UserDetailsService we have to remove this code in order to work correctly
+    / like we do in the example with UserDAO, UserDAOService and UserService which implements UserDetailsService!
+     also we need to create @Bean DaoAuthenticationProvider*/
+//    @Bean
+//    protected UserDetailsService userDetailsService() {
+//        UserDetails studentUser = User.builder()
+//                .username("Georgi")
+//                .password(encoder().encode("123"))
+////                .roles(STUDENT.name())
+//                .authorities(STUDENT.getGrantedAuthorities())
+//                .build();
+//
+//        UserDetails adminUser = User.builder()
+//                .username("Kyshenko")
+//                .password(encoder().encode("123"))
+////              .roles(ADMIN.name())
+//                .authorities(ADMIN.getGrantedAuthorities())
+//                .build();
+//
+//        UserDetails adminTraineeUser = User.builder()
+//                .username("Admin Trainee")
+//                .password(encoder().encode("123"))
+////              .roles(ADMIN_TRAINEE.name())
+//                .authorities(ADMIN_TRAINEE.getGrantedAuthorities())
+//                .build();
+//
+//        return new InMemoryUserDetailsManager(studentUser, adminUser, adminTraineeUser);
+//    }
 
     @Bean
     public PasswordEncoder encoder() {
